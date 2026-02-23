@@ -17,7 +17,7 @@ body{
     margin:auto;
     padding:15px;
 }
-h2{text-align:center;}
+h2{text-align:center;margin-bottom:15px;}
 
 input, select, textarea, button{
     width:100%;
@@ -38,10 +38,23 @@ button{
     font-weight:bold;
     cursor:pointer;
 }
+button.secondary{
+    background:#334155;
+    color:white;
+}
+button:hover{opacity:0.9;}
 .hidden{display:none;}
 textarea{
     height:220px;
     margin-top:15px;
+    resize:none;
+}
+.row{
+    display:flex;
+    gap:8px;
+}
+.row button{
+    flex:1;
 }
 </style>
 </head>
@@ -51,13 +64,13 @@ textarea{
 
 <h2>📺 EXTM3U CREATOR</h2>
 
-<label>Nama Channel</label>
+<label>Nama Channel *</label>
 <input type="text" id="name">
 
 <label>URL Logo TV</label>
 <input type="text" id="logo">
 
-<label>Jenis TV</label>
+<label>Jenis TV *</label>
 <select id="type">
     <option value="">Pilih</option>
     <option value="m3u8">M3U8</option>
@@ -69,30 +82,30 @@ textarea{
     <option value="ffmpeg">FFMPEG</option>
 </select>
 
-<label>URL Stream</label>
+<label>URL Stream *</label>
 <input type="text" id="stream">
 
-<!-- MPD DRM OPTIONS -->
+<!-- MPD OPTIONS -->
 <div id="mpdOptions" class="hidden">
 
-    <label>Jenis DRM</label>
-    <select id="drmType">
-        <option value="">Tanpa DRM</option>
-        <option value="clearkey">ClearKey</option>
-        <option value="widevine">Widevine</option>
-    </select>
+<label>Jenis DRM</label>
+<select id="drmType">
+    <option value="">Tanpa DRM</option>
+    <option value="clearkey">ClearKey</option>
+    <option value="widevine">Widevine</option>
+</select>
 
-    <div id="clearKeyBox" class="hidden">
-        <label>Key ID</label>
-        <input type="text" id="keyid">
-        <label>Key HEX</label>
-        <input type="text" id="keyhex">
-    </div>
+<div id="clearKeyBox" class="hidden">
+    <label>Key ID</label>
+    <input type="text" id="keyid">
+    <label>Key HEX</label>
+    <input type="text" id="keyhex">
+</div>
 
-    <div id="widevineBox" class="hidden">
-        <label>URL DRM</label>
-        <input type="text" id="drmurl">
-    </div>
+<div id="widevineBox" class="hidden">
+    <label>URL DRM</label>
+    <input type="text" id="drmurl">
+</div>
 
 </div>
 
@@ -110,18 +123,25 @@ textarea{
 
 <button onclick="createM3U()">CREATE EXTM3U</button>
 
-<textarea id="output"></textarea>
+<div class="row">
+    <button class="secondary" onclick="copyText()">COPY</button>
+    <button class="secondary" onclick="downloadM3U()">DOWNLOAD</button>
+</div>
+
+<textarea id="output" placeholder="Hasil EXTM3U akan muncul di sini..."></textarea>
 
 </div>
 
 <script>
 
+// Elements
 const typeSelect = document.getElementById("type");
 const mpdOptions = document.getElementById("mpdOptions");
 const drmType = document.getElementById("drmType");
 const clearKeyBox = document.getElementById("clearKeyBox");
 const widevineBox = document.getElementById("widevineBox");
 
+// Show MPD options
 typeSelect.addEventListener("change", function(){
     if(this.value === "mpd"){
         mpdOptions.classList.remove("hidden");
@@ -132,6 +152,7 @@ typeSelect.addEventListener("change", function(){
     }
 });
 
+// Show DRM inputs
 drmType.addEventListener("change", function(){
     if(this.value === "clearkey"){
         clearKeyBox.classList.remove("hidden");
@@ -147,55 +168,93 @@ drmType.addEventListener("change", function(){
     }
 });
 
+// CREATE
 function createM3U(){
 
-    const name = name.value;
-    const logo = logo.value;
-    const type = typeSelect.value;
-    const stream = document.getElementById("stream").value;
+    const name = document.getElementById("name").value.trim();
+    const logo = document.getElementById("logo").value.trim();
+    const type = document.getElementById("type").value;
+    const stream = document.getElementById("stream").value.trim();
     const group = document.getElementById("group").value;
-    const ua = document.getElementById("ua").value;
+    const ua = document.getElementById("ua").value.trim();
+
+    if(!name || !stream || !type){
+        alert("Nama, Jenis TV, dan URL Stream wajib diisi!");
+        return;
+    }
 
     let output = "#EXTM3U\n";
     output += `#EXTINF:-1 tvg-name="${name}" tvg-logo="${logo}" group-title="${group}",${name}\n`;
 
     if(type === "mpd"){
-        const drm = drmType.value;
-
         output += `#KODIPROP:inputstream.adaptive.manifest_type=mpd\n`;
 
+        const drm = drmType.value;
+
         if(drm === "clearkey"){
-            const keyid = document.getElementById("keyid").value;
-            const keyhex = document.getElementById("keyhex").value;
+            const keyid = document.getElementById("keyid").value.trim();
+            const keyhex = document.getElementById("keyhex").value.trim();
+
+            if(!keyid || !keyhex){
+                alert("Isi Key ID dan Key HEX!");
+                return;
+            }
 
             output += `#KODIPROP:inputstream.adaptive.license_type=clearkey\n`;
             output += `#KODIPROP:inputstream.adaptive.license_key=${keyid}:${keyhex}\n`;
         }
 
         if(drm === "widevine"){
-            const drmurl = document.getElementById("drmurl").value;
+            const drmurl = document.getElementById("drmurl").value.trim();
+
+            if(!drmurl){
+                alert("Isi URL DRM!");
+                return;
+            }
 
             output += `#KODIPROP:inputstream.adaptive.license_type=com.widevine.alpha\n`;
             output += `#KODIPROP:inputstream.adaptive.license_key=${drmurl}\n`;
         }
-
-        output += `${stream}\n`;
     }
 
-    else if(type === "ffmpeg"){
+    if(type === "ffmpeg"){
         output += `#EXTVLCOPT:network-caching=1000\n`;
-        output += `${stream}\n`;
-    }
-
-    else{
-        output += `${stream}\n`;
     }
 
     if(ua){
         output += `#EXTVLCOPT:http-user-agent=${ua}\n`;
     }
 
+    output += `${stream}\n`;
+
     document.getElementById("output").value = output;
+}
+
+// COPY
+function copyText(){
+    const text = document.getElementById("output");
+    if(!text.value){
+        alert("Belum ada output!");
+        return;
+    }
+    text.select();
+    document.execCommand("copy");
+    alert("Berhasil di-copy!");
+}
+
+// DOWNLOAD
+function downloadM3U(){
+    const content = document.getElementById("output").value;
+    if(!content){
+        alert("Belum ada output!");
+        return;
+    }
+
+    const blob = new Blob([content], { type: "text/plain" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "playlist.m3u";
+    a.click();
 }
 
 </script>
