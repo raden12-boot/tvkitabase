@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>EXTM3U Creator</title>
+
+<style>
+body{
+    margin:0;
+    font-family:Arial, sans-serif;
+    background:#0f172a;
+    color:white;
+}
+
+.container{
+    max-width:500px;
+    margin:auto;
+    padding:15px;
+}
+
+h2{
+    text-align:center;
+}
+
+input, select, textarea, button{
+    width:100%;
+    padding:12px;
+    margin-top:8px;
+    border-radius:8px;
+    border:none;
+    font-size:14px;
+    box-sizing:border-box;
+}
+
+input, select, textarea{
+    background:#1e293b;
+    color:white;
+}
+
+button{
+    background:#22c55e;
+    color:black;
+    font-weight:bold;
+    cursor:pointer;
+}
+
+button:hover{
+    opacity:0.9;
+}
+
+.hidden{
+    display:none;
+}
+
+textarea{
+    height:200px;
+    margin-top:15px;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+<h2>📺 EXTM3U CREATOR</h2>
+
+<label>Nama Channel</label>
+<input type="text" id="name">
+
+<label>URL Logo TV</label>
+<input type="text" id="logo">
+
+<label>Jenis TV</label>
+<select id="type">
+    <option value="">Pilih</option>
+    <option value="m3u8">M3U8</option>
+    <option value="mp4">MP4</option>
+    <option value="mkv">MKV</option>
+    <option value="ts">TS</option>
+    <option value="http">HTTP</option>
+    <option value="mpd">FFMPEG MPD</option>
+</select>
+
+<div id="streamBox">
+    <label>URL Stream</label>
+    <input type="text" id="stream">
+</div>
+
+<div id="mpdOptions" class="hidden">
+    <label>Jenis DRM</label>
+    <select id="drmType">
+        <option value="">Pilih DRM</option>
+        <option value="clearkey">ClearKey</option>
+        <option value="widevine">Widevine</option>
+    </select>
+
+    <div id="clearKeyBox" class="hidden">
+        <label>Key ID</label>
+        <input type="text" id="keyid">
+        <label>Key HEX</label>
+        <input type="text" id="keyhex">
+    </div>
+
+    <div id="widevineBox" class="hidden">
+        <label>URL DRM</label>
+        <input type="text" id="drmurl">
+    </div>
+</div>
+
+<label>User Agent</label>
+<input type="text" id="ua" placeholder="Kosongkan jika tidak ada">
+
+<label>Group TV</label>
+<select id="group">
+    <option value="SPORT">SPORT</option>
+    <option value="INDONESIA">INDONESIA</option>
+    <option value="MOVIE">MOVIE</option>
+    <option value="ENTERTAINMENT">ENTERTAINMENT</option>
+    <option value="LIVE EVENT">LIVE EVENT</option>
+</select>
+
+<button onclick="createM3U()">CREATE EXTM3U</button>
+
+<textarea id="output" placeholder="Hasil EXTM3U akan muncul di sini..."></textarea>
+
+</div>
+
+<script>
+const typeSelect = document.getElementById("type");
+const mpdOptions = document.getElementById("mpdOptions");
+const streamBox = document.getElementById("streamBox");
+const drmType = document.getElementById("drmType");
+const clearKeyBox = document.getElementById("clearKeyBox");
+const widevineBox = document.getElementById("widevineBox");
+
+typeSelect.addEventListener("change", function(){
+    if(this.value === "mpd"){
+        mpdOptions.classList.remove("hidden");
+    } else {
+        mpdOptions.classList.add("hidden");
+        clearKeyBox.classList.add("hidden");
+        widevineBox.classList.add("hidden");
+    }
+});
+
+drmType.addEventListener("change", function(){
+    if(this.value === "clearkey"){
+        clearKeyBox.classList.remove("hidden");
+        widevineBox.classList.add("hidden");
+    } else if(this.value === "widevine"){
+        widevineBox.classList.remove("hidden");
+        clearKeyBox.classList.add("hidden");
+    } else {
+        clearKeyBox.classList.add("hidden");
+        widevineBox.classList.add("hidden");
+    }
+});
+
+function createM3U(){
+    const name = document.getElementById("name").value;
+    const logo = document.getElementById("logo").value;
+    const type = document.getElementById("type").value;
+    const stream = document.getElementById("stream").value;
+    const group = document.getElementById("group").value;
+    const ua = document.getElementById("ua").value;
+
+    let output = "#EXTM3U\n";
+
+    output += `#EXTINF:-1 tvg-name="${name}" tvg-logo="${logo}" group-title="${group}",${name}\n`;
+
+    if(type === "mpd"){
+        const drm = drmType.value;
+
+        if(drm === "clearkey"){
+            const keyid = document.getElementById("keyid").value;
+            const keyhex = document.getElementById("keyhex").value;
+
+            output += `#KODIPROP:inputstream.adaptive.license_type=clearkey\n`;
+            output += `#KODIPROP:inputstream.adaptive.license_key=${keyid}:${keyhex}\n`;
+
+        } else if(drm === "widevine"){
+            const drmurl = document.getElementById("drmurl").value;
+
+            output += `#KODIPROP:inputstream.adaptive.license_type=com.widevine.alpha\n`;
+            output += `#KODIPROP:inputstream.adaptive.license_key=${drmurl}\n`;
+        }
+
+        output += `${stream}\n`;
+
+    } else {
+        output += `${stream}\n`;
+    }
+
+    if(ua){
+        output += `#EXTVLCOPT:http-user-agent=${ua}\n`;
+    }
+
+    document.getElementById("output").value = output;
+}
+</script>
+
+</body>
+</html>
