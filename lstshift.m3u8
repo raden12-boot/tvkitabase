@@ -1,0 +1,8 @@
+#EXTM3U
+#EXT-X-VERSION:3
+
+#EXT-X-STREAM-INF:BANDWIDTH=800000
+https://limit.fatherlessdad.workers.dev/aurorabird6.live/file2/pglUIN8~3D1RRaLAJMF4SazmlkHBNtp08aRsqgZouajyE7AIPoXEG9281+jaEhEWzditT7cmzdGzYvbTTiWHbOXWEP0g1F30H0u9vNBMzU4Xsv7sS2sRMHGVzLdPoeVsLiTQFLe9CuzJqX89C7UIQmNlxh1zaeEPHJhqXUK2Hj4=/MTA4MA==/aW5kZXgubTN1OA==.m3u8
+
+#EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID="subs",NAME="Indo",DEFAULT=YES,AUTOSELECT=YES,URI="https://cloudnestra.com/sub/ops-1954896492.vtt?t=1772229098&ext=.vtt"
+
